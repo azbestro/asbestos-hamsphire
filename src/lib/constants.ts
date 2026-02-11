@@ -1,8 +1,8 @@
 export const SITE_NAME = "Asbestos Services Hampshire";
 export const SITE_URL = "https://www.asbestosserviceshampshire.uk";
-export const PHONE_NUMBER = "023 8000 0000";
-export const PHONE_HREF = "tel:+442380000000";
-export const EMAIL = "info@asbestosserviceshampshire.uk";
+export const PHONE_NUMBER = "07424 521865";
+export const PHONE_HREF = "tel:+447424521865";
+export const EMAIL = "asbestoslad@gmail.com";
 
 export const HAMPSHIRE_CITIES = [
   { name: "Southampton", lat: 50.9097, lng: -1.4044 },

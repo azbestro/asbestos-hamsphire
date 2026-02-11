@@ -1,9 +1,18 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
-import { Phone, Mail, MapPin, Clock, ArrowRight } from "lucide-react";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { BreadcrumbSchema } from "@/components/SchemaMarkup";
 import { PHONE_NUMBER, PHONE_HREF, EMAIL } from "@/lib/constants";
+import ContactForm from "@/components/ContactForm";
+
+export const dynamic = "force-static";
+
+export const metadata: Metadata = {
+  title: "Contact Us — Free Asbestos Survey Quotes in Hampshire",
+  description:
+    "Get in touch for a free, no-obligation quote on asbestos surveys, removal, testing, or disposal in Hampshire. Same-week appointments available.",
+  alternates: { canonical: "/contact" },
+};
 
 export default function ContactPage() {
   return (
@@ -40,123 +49,7 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-primary mb-6">
                 Request a Survey or Ask a Question
               </h2>
-              <form
-                action={`mailto:${EMAIL}?subject=Asbestos%20Service%20Enquiry`}
-                method="POST"
-                encType="text/plain"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget;
-                  const formData = new FormData(form);
-                  const name = formData.get("name") as string;
-                  const phone = formData.get("phone") as string;
-                  const email = formData.get("email") as string;
-                  const service = formData.get("service") as string;
-                  const location = formData.get("location") as string;
-                  const message = formData.get("message") as string;
-                  if (!name || !phone || !email || !message) {
-                    alert("Please fill in all required fields.");
-                    return;
-                  }
-                  const body = `Name: ${name}%0APhone: ${phone}%0AEmail: ${email}%0AService: ${service}%0ALocation: ${location}%0AMessage: ${message}`;
-                  window.location.href = `mailto:${EMAIL}?subject=Asbestos Service Enquiry from ${encodeURIComponent(name)}&body=${body}`;
-                }}
-                aria-label="Contact form"
-                className="space-y-6"
-              >
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-2">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      required
-                      className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                      placeholder="Your full name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-2">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      required
-                      className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                      placeholder="Your phone number"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                    placeholder="your@email.com"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="service" className="block text-sm font-semibold text-foreground mb-2">
-                    Service Required
-                  </label>
-                  <select
-                    id="service"
-                    name="service"
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors bg-white"
-                  >
-                    <option value="">Select a service</option>
-                    <option value="survey">Asbestos Survey</option>
-                    <option value="removal">Asbestos Removal</option>
-                    <option value="encapsulation">Asbestos Encapsulation</option>
-                    <option value="sampling">Asbestos Sampling</option>
-                    <option value="testing">Asbestos Testing</option>
-                    <option value="disposal">Asbestos Disposal</option>
-                    <option value="other">Other / Not Sure</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="location" className="block text-sm font-semibold text-foreground mb-2">
-                    Property Location (Hampshire)
-                  </label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                    placeholder="e.g., Southampton, Winchester"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-semibold text-foreground mb-2">
-                    Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    required
-                    rows={5}
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-y"
-                    placeholder="Tell us about your requirements..."
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-secondary hover:bg-secondary-light text-primary-dark font-bold text-lg rounded-lg transition-colors"
-                >
-                  Send Enquiry
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </form>
+              <ContactForm />
             </div>
 
             {/* Contact Info */}
