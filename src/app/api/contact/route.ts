@@ -7,7 +7,7 @@ const SITE_NAME = "Asbestos Services Hampshire";
 export async function POST(request: Request) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+    const FROM_EMAIL = "noreply@asbestosserviceshampshire.uk";
     const formData = await request.formData();
 
     const name = formData.get("name") as string;
