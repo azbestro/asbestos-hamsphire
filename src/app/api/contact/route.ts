@@ -15,6 +15,10 @@ export async function POST(request: Request) {
     const phone = formData.get("phone") as string;
     const service = formData.get("service") as string;
     const location = formData.get("location") as string;
+    const propertyType = formData.get("propertyType") as string;
+    const bedrooms = formData.get("bedrooms") as string;
+    const urgency = formData.get("urgency") as string;
+    const preferredDate = formData.get("preferredDate") as string;
     const message = formData.get("message") as string;
 
     if (!name || !email || !phone || !message) {
@@ -40,6 +44,17 @@ export async function POST(request: Request) {
 
     const serviceLabel = service || "Not specified";
     const locationLabel = location || "Not specified";
+    const propertyLabel = propertyType || "Not specified";
+    const bedroomLabel = bedrooms || "N/A";
+    const urgencyLabel = urgency || "Not specified";
+    const dateLabel = preferredDate
+      ? new Date(preferredDate + "T00:00:00").toLocaleDateString("en-GB", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "No preference";
     const fileList =
       attachments.length > 0
         ? attachments.map((a) => a.filename).join(", ")
@@ -60,7 +75,7 @@ export async function POST(request: Request) {
           <div style="border: 1px solid #e5e7eb; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #374151; width: 120px;">Name:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #374151; width: 140px;">Name:</td>
                 <td style="padding: 8px 0; color: #1f2937;">${name}</td>
               </tr>
               <tr>
@@ -76,8 +91,20 @@ export async function POST(request: Request) {
                 <td style="padding: 8px 0; color: #1f2937;">${serviceLabel}</td>
               </tr>
               <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #374151;">Property Type:</td>
+                <td style="padding: 8px 0; color: #1f2937;">${propertyLabel}${propertyType === "Domestic" && bedrooms ? ` (${bedroomLabel} bed)` : ""}</td>
+              </tr>
+              <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #374151;">Location:</td>
                 <td style="padding: 8px 0; color: #1f2937;">${locationLabel}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #374151;">Urgency:</td>
+                <td style="padding: 8px 0; color: #1f2937;"><strong style="color: ${urgency === "ASAP" ? "#dc2626" : urgency === "Within a week" ? "#d97706" : "#1f2937"};">${urgencyLabel}</strong></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #374151;">Preferred Date:</td>
+                <td style="padding: 8px 0; color: #1f2937;">${dateLabel}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #374151;">Files:</td>
@@ -129,7 +156,10 @@ export async function POST(request: Request) {
                 <p style="font-weight: bold; color: #374151; margin: 0 0 8px; font-size: 14px;">Your enquiry summary:</p>
                 <p style="color: #6b7280; font-size: 14px; margin: 0; line-height: 1.6;">
                   Service: ${serviceLabel}<br/>
+                  Property: ${propertyLabel}${propertyType === "Domestic" && bedrooms ? ` (${bedroomLabel} bed)` : ""}<br/>
                   Location: ${locationLabel}<br/>
+                  Urgency: ${urgencyLabel}<br/>
+                  Preferred date: ${dateLabel}<br/>
                   Files attached: ${attachments.length}
                 </p>
               </div>

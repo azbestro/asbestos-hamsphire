@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import {
   ArrowRight,
   Upload,
@@ -9,6 +9,12 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Home,
+  Building2,
+  Factory,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
 } from "lucide-react";
 
 const MAX_FILES = 3;
@@ -23,12 +29,149 @@ const ACCEPTED_TYPES = [
 ];
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
+type PropertyType = "" | "Domestic" | "Commercial" | "Industrial";
+
+const PROPERTY_TYPES = [
+  { value: "Domestic" as const, label: "Domestic", icon: Home, desc: "House, flat, bungalow" },
+  { value: "Commercial" as const, label: "Commercial", icon: Building2, desc: "Office, shop, school" },
+  { value: "Industrial" as const, label: "Industrial", icon: Factory, desc: "Warehouse, factory, site" },
+];
+
+const URGENCY_OPTIONS = [
+  { value: "ASAP", label: "ASAP", color: "bg-red-50 border-red-200 text-red-700 hover:bg-red-100", activeColor: "bg-red-600 border-red-600 text-white" },
+  { value: "Within a week", label: "Within a Week", color: "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100", activeColor: "bg-amber-500 border-amber-500 text-white" },
+  { value: "Within a month", label: "Within a Month", color: "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100", activeColor: "bg-blue-600 border-blue-600 text-white" },
+  { value: "Just enquiring", label: "Just Enquiring", color: "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100", activeColor: "bg-gray-600 border-gray-600 text-white" },
+];
+
+const BEDROOM_OPTIONS = ["Studio", "1", "2", "3", "4", "5+"];
+
+const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+function MiniCalendar({
+  selected,
+  onSelect,
+  disabled,
+}: {
+  selected: string;
+  onSelect: (date: string) => void;
+  disabled: boolean;
+}) {
+  const [viewDate, setViewDate] = useState(() => new Date());
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  let startDay = firstDay.getDay() - 1;
+  if (startDay < 0) startDay = 6;
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < startDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const monthLabel = new Date(year, month).toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
+
+  const formatDate = (day: number) => {
+    const d = new Date(year, month, day);
+    return d.toISOString().split("T")[0];
+  };
+
+  const isPast = (day: number) => {
+    const d = new Date(year, month, day);
+    return d < today;
+  };
+
+  const canGoPrev = new Date(year, month, 1) > today;
+
+  return (
+    <div className="border border-border rounded-xl p-4 bg-white">
+      <div className="flex items-center justify-between mb-3">
+        <button
+          type="button"
+          onClick={prevMonth}
+          disabled={disabled || !canGoPrev}
+          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span className="text-sm font-semibold text-foreground">{monthLabel}</span>
+        <button
+          type="button"
+          onClick={nextMonth}
+          disabled={disabled}
+          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {DAYS.map((d) => (
+          <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">
+            {d}
+          </div>
+        ))}
+        {cells.map((day, i) => {
+          if (day === null) return <div key={`empty-${i}`} />;
+          const dateStr = formatDate(day);
+          const isSelected = selected === dateStr;
+          const past = isPast(day);
+          const isToday = dateStr === today.toISOString().split("T")[0];
+          return (
+            <button
+              key={dateStr}
+              type="button"
+              disabled={disabled || past}
+              onClick={() => onSelect(isSelected ? "" : dateStr)}
+              className={`
+                w-full aspect-square rounded-lg text-sm font-medium transition-all flex items-center justify-center
+                ${past ? "text-gray-300 cursor-not-allowed" : ""}
+                ${isSelected ? "bg-primary text-white shadow-sm" : ""}
+                ${!isSelected && !past ? "hover:bg-primary/10 text-foreground" : ""}
+                ${isToday && !isSelected ? "ring-1 ring-primary/40" : ""}
+              `}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <p className="text-xs text-primary font-medium mt-3 text-center">
+          Preferred date: {new Date(selected + "T00:00:00").toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function ContactForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<FormStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const [propertyType, setPropertyType] = useState<PropertyType>("");
+  const [bedrooms, setBedrooms] = useState("");
+  const [urgency, setUrgency] = useState("");
+  const [preferredDate, setPreferredDate] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -92,6 +235,12 @@ export default function ContactForm() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    // Add state-managed fields
+    formData.set("propertyType", propertyType);
+    formData.set("bedrooms", propertyType === "Domestic" ? bedrooms : "");
+    formData.set("urgency", urgency);
+    formData.set("preferredDate", preferredDate);
+
     // Remove any existing file entries and re-add our managed files
     formData.delete("files");
     for (const file of files) {
@@ -115,6 +264,10 @@ export default function ContactForm() {
       setStatus("success");
       formRef.current?.reset();
       setFiles([]);
+      setPropertyType("");
+      setBedrooms("");
+      setUrgency("");
+      setPreferredDate("");
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Please check your connection or call us directly.");
@@ -126,6 +279,8 @@ export default function ContactForm() {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  const isSubmitting = status === "submitting";
 
   if (status === "success") {
     return (
@@ -161,7 +316,7 @@ export default function ContactForm() {
       ref={formRef}
       onSubmit={handleSubmit}
       aria-label="Contact form"
-      className="space-y-6"
+      className="space-y-7"
     >
       {/* Name + Phone */}
       <div className="grid sm:grid-cols-2 gap-6">
@@ -177,7 +332,7 @@ export default function ContactForm() {
             id="name"
             name="name"
             required
-            disabled={status === "submitting"}
+            disabled={isSubmitting}
             className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
             placeholder="Your full name"
           />
@@ -194,7 +349,7 @@ export default function ContactForm() {
             id="phone"
             name="phone"
             required
-            disabled={status === "submitting"}
+            disabled={isSubmitting}
             className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
             placeholder="Your phone number"
           />
@@ -214,11 +369,80 @@ export default function ContactForm() {
           id="email"
           name="email"
           required
-          disabled={status === "submitting"}
+          disabled={isSubmitting}
           className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
           placeholder="your@email.com"
         />
       </div>
+
+      {/* Property Type Cards */}
+      <div>
+        <label className="block text-sm font-semibold text-foreground mb-3">
+          Property Type
+        </label>
+        <div className="grid grid-cols-3 gap-3">
+          {PROPERTY_TYPES.map((pt) => {
+            const Icon = pt.icon;
+            const isActive = propertyType === pt.value;
+            return (
+              <button
+                key={pt.value}
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => {
+                  setPropertyType(isActive ? "" : pt.value);
+                  if (isActive || pt.value !== "Domestic") setBedrooms("");
+                }}
+                className={`
+                  relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all disabled:opacity-50
+                  ${isActive
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border hover:border-primary/30 hover:bg-muted/50"
+                  }
+                `}
+              >
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isActive ? "bg-primary text-white" : "bg-muted text-gray-500"}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className={`text-sm font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>
+                  {pt.label}
+                </span>
+                <span className="text-xs text-gray-400 leading-tight text-center">
+                  {pt.desc}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Bedrooms — only for Domestic */}
+      {propertyType === "Domestic" && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+          <label className="block text-sm font-semibold text-foreground mb-3">
+            Number of Bedrooms
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {BEDROOM_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => setBedrooms(bedrooms === opt ? "" : opt)}
+                className={`
+                  px-4 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50
+                  ${bedrooms === opt
+                    ? "bg-primary border-primary text-white"
+                    : "border-border text-foreground hover:border-primary/30 hover:bg-muted/50"
+                  }
+                `}
+              >
+                {opt === "Studio" ? "Studio" : `${opt} Bed`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Service + Location */}
       <div className="grid sm:grid-cols-2 gap-6">
@@ -232,7 +456,7 @@ export default function ContactForm() {
           <select
             id="service"
             name="service"
-            disabled={status === "submitting"}
+            disabled={isSubmitting}
             className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors bg-white disabled:opacity-50"
           >
             <option value="">Select a service</option>
@@ -256,11 +480,48 @@ export default function ContactForm() {
             type="text"
             id="location"
             name="location"
-            disabled={status === "submitting"}
+            disabled={isSubmitting}
             className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
             placeholder="e.g., Southampton, Winchester"
           />
         </div>
+      </div>
+
+      {/* Urgency */}
+      <div>
+        <label className="block text-sm font-semibold text-foreground mb-3">
+          How Soon Do You Need This?
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {URGENCY_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => setUrgency(urgency === opt.value ? "" : opt.value)}
+              className={`
+                px-3 py-2.5 rounded-lg border text-sm font-semibold transition-all disabled:opacity-50
+                ${urgency === opt.value ? opt.activeColor : opt.color}
+              `}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Preferred Date — Mini Calendar */}
+      <div>
+        <label className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-primary" />
+          Preferred Survey Date{" "}
+          <span className="font-normal text-gray-400">(optional)</span>
+        </label>
+        <MiniCalendar
+          selected={preferredDate}
+          onSelect={setPreferredDate}
+          disabled={isSubmitting}
+        />
       </div>
 
       {/* Message */}
@@ -275,10 +536,10 @@ export default function ContactForm() {
           id="message"
           name="message"
           required
-          disabled={status === "submitting"}
-          rows={5}
+          disabled={isSubmitting}
+          rows={4}
           className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-y disabled:opacity-50"
-          placeholder="Tell us about your requirements — property type, any known asbestos, planned works, etc."
+          placeholder="Tell us about your requirements — any known asbestos, planned works, access details, etc."
         />
       </div>
 
@@ -297,7 +558,7 @@ export default function ContactForm() {
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className={`
-            relative cursor-pointer border-2 border-dashed rounded-xl p-8 text-center transition-colors
+            relative cursor-pointer border-2 border-dashed rounded-xl p-6 text-center transition-colors
             ${
               dragActive
                 ? "border-primary bg-primary/5"
@@ -317,7 +578,7 @@ export default function ContactForm() {
             }}
             className="hidden"
           />
-          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+          <Upload className="w-7 h-7 text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-600 font-medium">
             {dragActive ? (
               "Drop files here"
@@ -380,10 +641,10 @@ export default function ContactForm() {
       {/* Submit */}
       <button
         type="submit"
-        disabled={status === "submitting"}
-        className="inline-flex items-center gap-2 px-8 py-4 bg-secondary hover:bg-secondary-light text-primary-dark font-bold text-lg rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        disabled={isSubmitting}
+        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-secondary hover:bg-secondary-light text-primary-dark font-bold text-lg rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {status === "submitting" ? (
+        {isSubmitting ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
             Sending...
